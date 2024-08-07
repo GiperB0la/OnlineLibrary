@@ -1,6 +1,0 @@
-D:/cpp/GitHub/OnlineLibrary/build/CMakeFiles/ALL_BUILD.dir
-D:/cpp/GitHub/OnlineLibrary/build/CMakeFiles/ZERO_CHECK.dir
-D:/cpp/GitHub/OnlineLibrary/build/Client/CMakeFiles/Client.dir
-D:/cpp/GitHub/OnlineLibrary/build/Client/CMakeFiles/ALL_BUILD.dir
-D:/cpp/GitHub/OnlineLibrary/build/Server/CMakeFiles/Server.dir
-D:/cpp/GitHub/OnlineLibrary/build/Server/CMakeFiles/ALL_BUILD.dir
