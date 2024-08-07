@@ -17,4 +17,8 @@ public:
 	std::string GetInformationBooks();
 	std::filesystem::path PATHBOOKS;
 	std::filesystem::path PATHUSERS;
+private:
+	void CreateNewData();
+	void CreateNewBooks();
+	void CreateFilesBook();
 };

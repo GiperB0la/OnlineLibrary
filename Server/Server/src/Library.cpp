@@ -13,8 +13,20 @@ Library::Library()
 		path_str.erase(pos);
 	}
 
-	if (!std::filesystem::exists(path_str + "Server\\Data"))
-		path_str += "Server\\Server\\Data";
+	if (!std::filesystem::exists(path_str + "Server\\Data")) {
+		if (!std::filesystem::exists(path_str + "Server\\Server\\Data")) {
+			if (!std::filesystem::exists(path_str + "Data")) {
+				CreateNewData();
+				return;
+			}
+			else {
+				path_str += "Data";
+			}
+		}
+		else {
+			path_str += "Server\\Server\\Data";
+		}
+	}
 	else
 		path_str += "Server\\Data";
 
@@ -53,4 +65,42 @@ std::string Library::GetInformationBooks()
 			message += "\n";
 	}
 	return message;
+}
+
+void Library::CreateNewData()
+{
+	std::filesystem::create_directories(std::filesystem::current_path() / "Data");
+	std::filesystem::create_directories(std::filesystem::current_path() / "Data" / "Books");
+	std::filesystem::create_directories(std::filesystem::current_path() / "Data" / "Users");
+	
+	if (!std::filesystem::exists(std::filesystem::current_path() / "Data")) {
+		std::cout << "Error create folder> " << std::filesystem::current_path() << std::endl;
+		exit(0);
+	}
+
+	PATHBOOKS = std::filesystem::current_path() / "Data" / "Books";
+	PATHUSERS = std::filesystem::current_path() / "Data" / "Users";
+
+	CreateNewBooks();
+	GetDataFromDatabase();
+	CreateFilesBook();
+}
+
+void Library::CreateNewBooks()
+{
+	Books.push_back(std::move(Book("451 degrees Fahrenheit", "Ray Bradbury", "1953")));
+	Books.push_back(std::move(Book("A hundred years of loneliness", "Gabriel Garcia Marqu ez", "1967")));
+	Books.push_back(std::move(Book("Fight Club", "Chuck Palahniuk", "1996")));
+	Books.push_back(std::move(Book("Martin Eden", "Jack London", "1909")));
+	Books.push_back(std::move(Book("The hero of our time", "Mikhail Lermontov", "1840")));
+}
+
+void Library::CreateFilesBook()
+{
+	for (Book book : Books) {
+		std::ofstream file(PATHBOOKS / (book.name + ".txt"));
+		file << book.name << std::endl;
+        file << book.author << std::endl;
+        file << book.year << std::endl;
+	}
 }
