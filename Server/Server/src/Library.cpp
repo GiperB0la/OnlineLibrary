@@ -1,106 +1,94 @@
 #include "..\\include\\Library.h"
 
 Library::Library()
-	: PATHBOOKS(std::filesystem::current_path()),
-	PATHUSERS(std::filesystem::current_path())
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+    std::filesystem::path currentPath = std::filesystem::current_path();
+    std::filesystem::path basePath;
 
-	std::string path_str = currentPath.string();
+    if (std::filesystem::exists(currentPath / "Server" / "Data")) {
+        basePath = currentPath / "Server" / "Data";
+    }
+    else if (std::filesystem::exists(currentPath / "Server" / "Server" / "Data")) {
+        basePath = currentPath / "Server" / "Server" / "Data";
+    }
+    else if (std::filesystem::exists(currentPath / "Data")) {
+        basePath = currentPath / "Data";
+    }
+    else {
+        CreateNewData();
+        return;
+    }
 
-	size_t pos = path_str.find("build");
-	if (pos != std::string::npos) {
-		path_str.erase(pos);
-	}
+    PATHBOOKS = basePath / "Books";
+    PATHUSERS = basePath / "Users";
 
-	if (!std::filesystem::exists(path_str + "Server\\Data")) {
-		if (!std::filesystem::exists(path_str + "Server\\Server\\Data")) {
-			if (!std::filesystem::exists(path_str + "Data")) {
-				CreateNewData();
-				return;
-			}
-			else {
-				path_str += "Data";
-			}
-		}
-		else {
-			path_str += "Server\\Server\\Data";
-		}
-	}
-	else
-		path_str += "Server\\Data";
-
-	PATHBOOKS = std::filesystem::path(path_str) / "Books";
-	PATHUSERS = std::filesystem::path(path_str) / "Users";
-
-	GetDataFromDatabase();
+    GetDataFromDatabase();
 }
 
 void Library::GetDataFromDatabase()
 {
-	if (!(std::filesystem::is_empty(PATHBOOKS))) {
-		for (const auto& file : std::filesystem::directory_iterator(PATHBOOKS)) {
-			if (std::filesystem::is_regular_file(file)) {
-				std::ifstream inFile(file.path());
-				std::string line;
-				std::vector<std::string> forBook;
-				while (getline(inFile, line)) {
-					forBook.push_back(line);
-				}
-				Book book(forBook.at(0), forBook.at(1), forBook.at(2));
-				Books.push_back(book);
-			}
-		}
-	}
+    if (!Books.empty() || std::filesystem::is_empty(PATHBOOKS)) return;
+
+    for (const auto& file : std::filesystem::directory_iterator(PATHBOOKS)) {
+        if (std::filesystem::is_regular_file(file)) {
+            std::ifstream inFile(file.path());
+            std::vector<std::string> bookDetails;
+            std::string line;
+
+            while (getline(inFile, line)) {
+                bookDetails.push_back(line);
+            }
+
+            if (bookDetails.size() >= 3) {
+                Books.emplace_back(bookDetails[0], bookDetails[1], bookDetails[2]);
+            }
+        }
+    }
 }
 
 std::string Library::GetInformationBooks()
 {
-	std::string message;
-	message += "List books in library:\n=====================\n";
-	int index = 0;
-	for (Book book : Books) {
-		message += std::to_string(++index) + ". Book: " + book.name + "\nAuthor: " + book.author + "\nYear: " + book.year + "\n";
-		if (index != Books.size())
-			message += "\n";
-	}
-	return message;
+    std::string message = "List of books in library:\n=====================\n";
+    int index = 0;
+
+    for (const auto& book : Books) {
+        message += std::to_string(++index) + ". Book: " + book.name + "\nAuthor: " + book.author + "\nYear: " + book.year + "\n";
+        if (index != Books.size())
+            message += "\n";
+    }
+
+    return message;
 }
 
 void Library::CreateNewData()
 {
-	std::filesystem::create_directories(std::filesystem::current_path() / "Data");
-	std::filesystem::create_directories(std::filesystem::current_path() / "Data" / "Books");
-	std::filesystem::create_directories(std::filesystem::current_path() / "Data" / "Users");
-	
-	if (!std::filesystem::exists(std::filesystem::current_path() / "Data")) {
-		std::cout << "Error create folder> " << std::filesystem::current_path() << std::endl;
-		exit(0);
-	}
+    std::filesystem::path dataPath = std::filesystem::current_path() / "Data";
 
-	PATHBOOKS = std::filesystem::current_path() / "Data" / "Books";
-	PATHUSERS = std::filesystem::current_path() / "Data" / "Users";
+    std::filesystem::create_directories(dataPath / "Books");
+    std::filesystem::create_directories(dataPath / "Users");
 
-	CreateNewBooks();
-	GetDataFromDatabase();
-	CreateFilesBook();
+    PATHBOOKS = dataPath / "Books";
+    PATHUSERS = dataPath / "Users";
+
+    CreateNewBooks();
+    CreateFilesBook();
 }
 
 void Library::CreateNewBooks()
 {
-	Books.push_back(std::move(Book("451 degrees Fahrenheit", "Ray Bradbury", "1953")));
-	Books.push_back(std::move(Book("A hundred years of loneliness", "Gabriel Garcia Marqu ez", "1967")));
-	Books.push_back(std::move(Book("Fight Club", "Chuck Palahniuk", "1996")));
-	Books.push_back(std::move(Book("Martin Eden", "Jack London", "1909")));
-	Books.push_back(std::move(Book("The hero of our time", "Mikhail Lermontov", "1840")));
+    Books.emplace_back("451 degrees Fahrenheit", "Ray Bradbury", "1953");
+    Books.emplace_back("A Hundred Years of Solitude", "Gabriel Garcia Marquez", "1967");
+    Books.emplace_back("Fight Club", "Chuck Palahniuk", "1996");
+    Books.emplace_back("Martin Eden", "Jack London", "1909");
+    Books.emplace_back("The Hero of Our Time", "Mikhail Lermontov", "1840");
 }
 
 void Library::CreateFilesBook()
 {
-	for (Book book : Books) {
-		std::ofstream file(PATHBOOKS / (book.name + ".txt"));
-		file << book.name << std::endl;
+    for (const auto& book : Books) {
+        std::ofstream file(PATHBOOKS / (book.name + ".txt"));
+        file << book.name << std::endl;
         file << book.author << std::endl;
         file << book.year << std::endl;
-	}
+    }
 }
